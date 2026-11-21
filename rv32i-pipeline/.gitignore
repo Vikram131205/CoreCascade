@@ -1,0 +1,28 @@
+# Vivado generated files
+pp/pp.cache/
+pp/pp.hw/
+pp/pp.ip_user_files/
+pp/pp.runs/
+pp/pp.sim/
+pp/.Xil/
+pp.xpr.zip
+*.jou
+*.log
+*.pb
+*.wdb
+*.str
+
+# Simulation build artifacts
+verification/sim_build/
+verification/__pycache__/
+verification/run_test.py
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+*.pyc
+
+# waveforms
+*.vcd

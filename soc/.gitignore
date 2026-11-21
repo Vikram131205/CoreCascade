@@ -1,0 +1,5 @@
+__pycache__/
+build/
+test/results.xml
+test/sim_build/
+*.vcd

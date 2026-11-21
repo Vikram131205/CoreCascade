@@ -1,0 +1,77 @@
+[*] GTKWave layout for soc.vcd  (make VCD=1, then: gtkwave soc.vcd soc.gtkw)
+[dumpfile] "soc.vcd"
+[timestart] 0
+[size] 1600 900
+[signals_width] 300
+[sst_expanded] 1
+@200
+-1. Chip pins
+@28
+soc_top.clk
+soc_top.reset
+soc_top.boot
+soc_top.u_boot.active
+soc_top.uart_tx
+soc_top.uart_rx
+soc_top.halted
+@200
+-2. CPU pipeline
+@22
+soc_top.u_cpu.pc[31:0]
+soc_top.u_cpu.ins_s2[31:0]
+@28
+soc_top.u_cpu.valid_s2
+soc_top.u_cpu.stall
+soc_top.u_cpu.flush
+soc_top.u_cpu.freeze
+@200
+-3. Shared bus
+@28
+soc_top.bus_req
+soc_top.bus_gnt
+soc_top.bus_we
+@22
+soc_top.bus_addr[31:0]
+soc_top.bus_wdata[31:0]
+soc_top.bus_rdata[31:0]
+@200
+-4. GPU
+@28
+soc_top.u_gpu.ctrl_start
+soc_top.u_gpu.busy
+soc_top.gpu_done
+@24
+soc_top.u_gpu.dcr_value[7:0]
+soc_top.u_gpu.cycles[31:0]
+@28
+soc_top.u_gpu.p_valid
+@24
+soc_top.u_gpu.p_addr[7:0]
+@28
+soc_top.u_gpu.d_rvalid
+@24
+soc_top.u_gpu.d_raddr[7:0]
+@28
+soc_top.u_gpu.d_wvalid
+@24
+soc_top.u_gpu.d_waddr[7:0]
+soc_top.u_gpu.d_wdata[7:0]
+@28
+soc_top.u_gpu.m_req
+soc_top.u_gpu.m_gnt
+@200
+-5. Interrupts
+@28
+soc_top.u_sys.pend[1:0]
+soc_top.cpu_irq
+soc_top.u_cpu.irq_take
+@22
+soc_top.u_cpu.csrs.mepc_q[31:0]
+soc_top.u_cpu.csrs.mcause[31:0]
+@200
+-6. UART console
+@28
+soc_top.u_uart.tx_busy
+soc_top.u_uart.rx_valid
+[pattern_trace] 1
+[pattern_trace] 0

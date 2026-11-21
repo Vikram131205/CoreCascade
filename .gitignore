@@ -1,0 +1,29 @@
+# simulation / build outputs
+sim_build/
+build/
+__pycache__/
+*.pyc
+results.xml
+*.vcd
+*.fst
+*.vvp
+*.o
+*.elf
+*.bin
+
+# Vivado
+*.jou
+*.log
+hs_err*
+.Xil/
+*.cache/
+*.runs/
+*.hw/
+*.ip_user_files/
+
+# editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
