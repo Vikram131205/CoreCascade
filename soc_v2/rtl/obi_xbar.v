@@ -71,9 +71,13 @@ module obi_xbar #(
     // ---------------------------------------------------------------- arbitration
     reg [NS*MW-1:0] win;
     reg [NS-1:0]    any;
+    reg [NM-1:0]    rq;
+    reg [MW:0]      ai3;
     always @(*) begin
         ak = 0;
         ai = 0;
+        rq  = {NM{1'b0}};                 // defaults: no latches
+        ai3 = {(MW+1){1'b0}};
         for (as_ = 0; as_ < NS; as_ = as_ + 1) begin
             any[as_] = 1'b0;
             win[as_*MW +: MW] = {MW{1'b0}};
@@ -81,12 +85,14 @@ module obi_xbar #(
                 any[as_] = 1'b1;
                 win[as_*MW +: MW] = PRIO_M;
             end else begin
+                for (ak = 0; ak < NM; ak = ak + 1)
+                    rq[ak] = m_req[ak] & hit[ak*NS+as_];       // static indices
                 for (ak = 1; ak <= NM; ak = ak + 1) begin
-                    ai = last[as_*MW +: MW] + ak;
-                    if (ai >= NM) ai = ai - NM;
-                    if (!any[as_] && m_req[ai] && hit[ai*NS+as_]) begin
+                    ai3 = {1'b0, last[as_*MW +: MW]} + ak[MW:0];   // narrow, any NM
+                    if (ai3 >= NM) ai3 = ai3 - NM;
+                    if (!any[as_] && rq[ai3[MW-1:0]]) begin
                         any[as_] = 1'b1;
-                        win[as_*MW +: MW] = ai;
+                        win[as_*MW +: MW] = ai3[MW-1:0];
                     end
                 end
             end

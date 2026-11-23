@@ -15,6 +15,8 @@ Targets: FPGA (Nexys 4 DDR) as the main platform, and a sky130 GDS (OpenLane) of
 | `soc_v2/` | **Current SoC.** CPU with private ITCM/DTCM, an 8-master × 11-slave OBI crossbar, 8-bank interleaved shared SRAM, a GPU command processor (ring buffer, fences, IRQs) in front of unmodified tiny-gpu, a VGA display controller, an interrupt controller, a timer, UART boot and a console. |
 | `soc/` | SoC v1 (frozen baseline): CPU + tiny-gpu + shared memory, UART boot. The CPU snapshot it uses is in `soc/rtl/cpu_v1/`. |
 | `tiny-gpu/` | Upstream tiny-gpu as a git submodule, **used unmodified**. |
+| `sw/asm/` | Assembler and disassembler for the tiny-gpu ISA. The v2 firmware's GPU kernels are written in assembly (`soc_v2/fw/kernels/*.s`). |
+| `docs/spec/` | Frozen v1.0 specs: on-chip bus (`bus_obi.md`) and memory map with every register (`memory_map.md`). |
 | `MASTER_PLAN.md` | Architecture, decision log (with rejected alternatives) and the 3-semester roadmap. |
 
 ## SoC v2 at a glance
@@ -47,18 +49,28 @@ The v2 system test boots firmware over UART and runs 7 firmware tests: concurren
 queued launches, GPU → framebuffer → VGA (3 frames checked pixel-for-pixel), CP error and recovery,
 exceptions, and the timer. It passes, and the CPU's 21 tests pass.
 
+The interconnect has its own unit tests (`soc_v2/test/unit`, 11 tests): a reference model and OBI
+protocol checker for the crossbar, the real SRAM banks under 8 concurrent masters, one bank, and the
+peripheral bridge. Seven deliberately broken RTL variants all fail them. Measured: 8 masters on 8 banks
+move 7.99 transfers per cycle; on one bank, 0.98.
+
 ## Running
 
-Requirements: Icarus Verilog, cocotb 2.x, sv2v, clang + ld.lld (RISC-V target), and optionally Yosys.
+Requirements: Icarus Verilog (12 or newer), cocotb 2.x, sv2v, clang + ld.lld (RISC-V target), Python 3,
+and optionally Yosys (`make lint`) and llvm-objdump (firmware listing).
 
 ```bash
 git clone --recursive https://github.com/Vikram131205/CoreCascade.git
 cd CoreCascade/rv32i-pipeline/verification && make   # CPU tests
 cd ../../soc_v2 && make test                         # SoC v2: firmware + GPU kernels + system test
+make unit                                            # SoC v2: interconnect unit tests
+python3 ../sw/asm/test_tinygpu_asm.py                # assembler tests
 ```
 
 ## Status
 
-Done: CPU v2, OBI interconnect, memories, command processor, display controller, interrupts, system test.
-Next: FPGA top level and constraints, UART FIFOs, performance counters, runtime debug bridge,
-GPU v2 (32-bit, pipelined), and OpenLane GDS. See `MASTER_PLAN.md`.
+Done: CPU v2, OBI interconnect, memories, command processor, display controller, interrupts, system test,
+interconnect unit tests, tiny-gpu assembler, frozen bus and memory-map specs (`docs/spec/`).
+Next: ISA v2 and GPU v2 (32-bit, divergence, pipelined), FPGA top level and constraints, the Verilator
+virtual board, UART FIFOs, performance counters, runtime debug bridge, and the LibreLane GDS.
+See `MASTER_PLAN.md` and `docs/status/`.

@@ -4,23 +4,14 @@
 #include "soc.h"
 
 // ---------------------------------------------------------------------------
-// GPU kernels (tiny-gpu ISA, one 16-bit instruction per word, in shared SRAM)
+// GPU kernels: written in assembly in fw/kernels/*.s and assembled by
+// sw/asm/tinygpu_asm.py into build/kernels.h (one 16-bit instruction per
+// 32-bit word, in the .gpu section of shared SRAM):
+//   k_matadd   C[i] = A[i] + B[i];  A @ 0, B @ 8, C @ 16 (GPU addresses)
+//   k_matmul   2x2 matmul;          A @ 0, B @ 4, C @ 8
+//   k_pattern  pixel[i] = 3 * i     (byte mode: GPU address i = byte i)
 // ---------------------------------------------------------------------------
-// C[i] = A[i] + B[i]; A @ 0, B @ 8, C @ 16 (GPU addresses)
-static const uint32_t k_matadd[] __attribute__((section(".gpu"))) = {
-    0x50DE, 0x300F, 0x9100, 0x9208, 0x9310, 0x3410, 0x7440,
-    0x3520, 0x7550, 0x3645, 0x3730, 0x8076, 0xF000,
-};
-// 2x2 matmul; A @ 0, B @ 4, C @ 8
-static const uint32_t k_matmul[] __attribute__((section(".gpu"))) = {
-    0x50DE, 0x300F, 0x9101, 0x9202, 0x9300, 0x9404, 0x9508, 0x6602, 0x5762, 0x4707,
-    0x9800, 0x9900, 0x5A62, 0x3AA9, 0x3AA3, 0x7AA0, 0x5B92, 0x3BB7, 0x3BB4, 0x7BB0,
-    0x5CAB, 0x388C, 0x3991, 0x2092, 0x180C, 0x3950, 0x8098, 0xF000,
-};
-// pixel[i] = 3 * i (byte mode: GPU address i = byte i of the window)
-static const uint32_t k_pattern[] __attribute__((section(".gpu"))) = {
-    0x50DE, 0x300F, 0x9103, 0x5201, 0x8002, 0xF000,
-};
+#include "kernels.h"
 
 // GPU data windows and the framebuffer live in shared SRAM
 static volatile uint32_t win_add[24]  __attribute__((section(".shared")));

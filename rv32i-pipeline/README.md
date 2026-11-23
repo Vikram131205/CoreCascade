@@ -1,6 +1,6 @@
-# RV32I 5-Stage Pipelined Processor
+# RV32IM 5-Stage Pipelined Processor
 
-A fully functional **RISC-V RV32I** 5-stage pipelined processor implemented in Verilog, with complete hazard handling and a Python-based golden model verification framework.
+A fully functional **RISC-V RV32IM + Zicsr** (machine mode) 5-stage pipelined processor implemented in Verilog, with complete hazard handling, precise traps, timer and external interrupts, an OBI data port, and a Python golden-model verification framework.
 
 ## Architecture
 
@@ -26,19 +26,19 @@ A fully functional **RISC-V RV32I** 5-stage pipelined processor implemented in V
 | **Jump**   | JAL, JALR |
 | **Upper**  | LUI, AUIPC |
 | **Zicsr**  | CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI |
-| **Privileged** | MRET; machine external interrupt (`irq` pin) |
+| **M extension** | MUL, MULH, MULHSU, MULHU, DIV, DIVU, REM, REMU (`mdu.v`: multiply holds EX 3 cycles, divide about 35) |
+| **Privileged** | MRET, ECALL, EBREAK; machine external (`irq`) and timer (`irq_timer`) interrupts |
 
-CSRs: `mstatus, misa, mie, mtvec, mscratch, mepc, mcause, mip, mcycle/cycle, mhartid` (`csr_unit.v`).
-The interrupt is taken on the instruction in ID. Older instructions complete, and `mepc` points at the interrupted instruction.
-FENCE / ECALL / EBREAK / WFI execute as NOPs. With LUI/AUIPC/JALR the core runs C
-code compiled by `clang --target=riscv32 -march=rv32i` (see `../soc/fw`).
+CSRs: `mstatus, misa, mie, mtvec, mscratch, mepc, mcause, mtval, mip, mcycle(h)/cycle(h), minstret(h)/instret(h), mhartid` (`csr_unit.v`).
+Traps are precise. Illegal instructions, ECALL, EBREAK, misaligned loads/stores and misaligned branch/jump targets trap in EX; a load/store bus error (`err`) traps in MEM. The oldest wins; `mepc` is the faulting instruction and `mtval` the bad address or instruction. Interrupts are taken on the instruction in ID (external before timer): older instructions complete and `mepc` points at the interrupted one. FENCE and WFI execute as NOPs.
+The core runs C compiled by `clang --target=riscv32 -march=rv32im_zicsr` (see `../soc_v2/fw`).
 
 ### Memory Interface
 
 `rv32i_core` has external bus ports, so the same core drops into an SoC:
 
 - **Instruction port:** synchronous-read memory, 1-cycle latency. The core presents the *next* PC so the data lines up with IF.
-- **Data port:** `req/we/be/addr/wdata`, issued from EX. Read data comes back the cycle after `gnt`, in MEM. While `req && !gnt` the whole pipeline freezes, so another bus master (e.g. a GPU) can hold the memory.
+- **Data port (OBI, see `../docs/spec/bus_obi.md`):** `req/we/be/addr/wdata`, issued from EX and held until `gnt`. The response (`rvalid`, `rdata`, `err`) can come any number of cycles later, for reads and writes; one transaction is outstanding at a time. The whole pipeline freezes while a request waits for `gnt` or the instruction in MEM waits for `rvalid`, so other bus masters (e.g. a GPU) can hold the memory.
 
 Both ports match single-port synchronous SRAM macros, so the core fits FPGA BRAM and ASIC SRAM.
 
@@ -120,9 +120,12 @@ core cannot rely on stale memory output.
 
 - CSR instructions
 - random interrupts in the middle of random programs, with and without bus stalls: results must match an uninterrupted run, and every interrupt must be handled exactly once
+- timer interrupts, and external-over-timer priority
+- MUL/MULH/MULHSU/MULHU/DIV/DIVU/REM/REMU: directed corner cases (divide by zero, overflow) and random programs mixing M instructions
+- every exception type once (ecall, ebreak, illegal, misaligned load/store/target, load and store access faults), with and without bus stalls: causes, `mepc` and `mtval` checked
 
 ```
-TESTS=16 PASS=16 FAIL=0
+TESTS=21 PASS=21 FAIL=0
 ```
 
 ## Tools Used

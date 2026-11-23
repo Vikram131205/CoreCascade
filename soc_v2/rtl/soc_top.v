@@ -54,15 +54,9 @@ module soc_top #(
     wire [NS*4-1:0]  s_be;
     wire [NS*32-1:0] s_addr, s_wdata, s_rdata;
 
-    localparam [NS*32-1:0] SLV_BASE = {32'h4000_0000,
-        32'h2000_001C, 32'h2000_0018, 32'h2000_0014, 32'h2000_0010,
-        32'h2000_000C, 32'h2000_0008, 32'h2000_0004, 32'h2000_0000,
-        32'h1000_0000, 32'h0000_0000};
-    localparam [NS*32-1:0] SLV_MASK = {32'hF000_0000,
-        {8{32'hF000_001C}},
-        32'hF000_0000, 32'hF000_0000};
+    `include "soc_map.vh"           // SLV_BASE, SLV_MASK, PRIO_M
 
-    obi_xbar #(.NM(NM), .NS(NS), .SLV_BASE(SLV_BASE), .SLV_MASK(SLV_MASK), .PRIO_M(7)) u_xbar (
+    obi_xbar #(.NM(NM), .NS(NS), .SLV_BASE(SLV_BASE), .SLV_MASK(SLV_MASK), .PRIO_M(PRIO_M)) u_xbar (
         .clk(clk), .reset(rst),
         .m_req(m_req), .m_we(m_we), .m_be(m_be), .m_addr(m_addr), .m_wdata(m_wdata),
         .m_gnt(m_gnt), .m_rvalid(m_rvalid), .m_rdata(m_rdata), .m_err(m_err),

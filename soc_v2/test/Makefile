@@ -19,6 +19,7 @@ VERILOG_SOURCES = \
 # Simulation configuration: fast UART (8 clocks/bit) and a small display
 # (16x16 framebuffer, 32x32 visible, short porches) so frames take ~2.8k cycles.
 UART_DIV ?= 8
+COMPILE_ARGS += -I../rtl
 COMPILE_ARGS += -Psoc_top.UART_DIV=$(UART_DIV) \
     -Psoc_top.FB_W=16 -Psoc_top.FB_H=16 \
     -Psoc_top.H_FP=2 -Psoc_top.H_SYNC=4 -Psoc_top.H_BP=2 \

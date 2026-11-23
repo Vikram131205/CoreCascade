@@ -1,5 +1,7 @@
 # simulation / build outputs
 sim_build/
+sim_build_*/
+results_*.xml
 build/
 __pycache__/
 *.pyc
